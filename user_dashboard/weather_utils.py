@@ -7,6 +7,12 @@ import math
 
 
 
+def degToCompass(degree):
+    val = int((degree/22.5)+.5)
+    arr = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+           "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
+    return arr[(val % 16)]
+
 def get_forecast_data(open_weather_key, lat, lon):
     
 
@@ -64,3 +70,17 @@ def get_forecast_data(open_weather_key, lat, lon):
     for d in daily_data:
         wind_speed_kph = round((3.6 * d['wind_speed']))
         wind_speeds.append(wind_speed_kph)
+
+    # get wind directions for 7 days
+    wind_directions = []
+    for d in daily_data:
+        wind_direction = degToCompass(
+            d['wind_deg']) + "  " + str(d['wind_deg'])
+        wind_directions.append(wind_direction)
+
+    return {
+        'min_temp': minimum_temprature,
+        'max_temp': maximum_temprature,
+        'wind_speeds': wind_speeds,
+        'wind_directions': wind_directions,
+    }
