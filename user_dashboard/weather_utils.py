@@ -84,3 +84,57 @@ def get_forecast_data(open_weather_key, lat, lon):
         'wind_speeds': wind_speeds,
         'wind_directions': wind_directions,
     }
+    
+def get_next_hour_forecast(open_weather_key, lat, lon):
+    
+    result_dict = {
+        'success': False,
+        'has_warning': False,
+        'warning_description': '',
+    }
+    if not open_weather_key:
+        return False
+
+    if not lat:
+        return False
+
+    if not lon:
+        return False
+        # call openweather api
+    url = 'https://api.openweathermap.org/data/2.5/onecall?lat={}&lon={}&exclude=current,daily,minutely,alerts&appid={}'.format(
+        lat, lon, open_weather_key)
+    r = requests.get(url)
+
+    if r.status_code == 400:
+        # invalid parameters - i.e lat and lon
+        return False
+
+    if r.status_code == 401:
+        # invalid api key
+        return False
+
+    if r.status_code != 200:
+        # server internal errors
+        return False
+
+    # start calculations
+    json_response = r.json()
+    next_hour_data = json_response['hourly'][1]
+    if next_hour_data['weather'][0]['main'] in ['Rain', 'Snow', 'Thunderstorm']:
+        result_dict['success'] = True
+        result_dict['has_warning'] = True
+        result_dict['warning_description'] = next_hour_data['weather']['0']['main']
+    else:
+        result_dict['success'] = True
+
+    return result_dict
+
+
+if __name__ == '__main__':
+    # print(get_forecast_data(
+    #     '8351485f84f81a10488f0714cc1ea20d', '26.848623', '80.8024265'))
+
+    print(get_next_hour_forecast(
+        '8351485f84f81a10488f0714cc1ea20d', '33.9037196', '73.3784368'
+    ))
+    
