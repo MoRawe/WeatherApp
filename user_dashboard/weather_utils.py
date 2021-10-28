@@ -84,6 +84,78 @@ def get_forecast_data(open_weather_key, lat, lon):
         'wind_speeds': wind_speeds,
         'wind_directions': wind_directions,
     }
+
+def get_tomorrow_forecast(open_weather_key, lat, lon):
+    '''
+    request data from openweatherapi for next day to send alerts
+
+    INPUT:
+    -open weather key
+    -lat - location longitude
+    -lon - location latitude
+
+    RETURN dict
+    -success - True/False in case of errors
+    -has_heat_warning - True/False
+    -has_frost_warning - True/False
+    '''
+
+    result_dict = {
+        'success': False,
+        'has_heat_warning': False,
+        'has_frost_warning': False,
+    }
+
+    if not open_weather_key:
+        return False
+
+    if not lat:
+        return False
+
+    if not lon:
+        return False
+
+    # call openweather api
+    url = 'https://api.openweathermap.org/data/2.5/onecall?lat={}&lon={}&exclude=current,minutely,hourly,alerts&appid={}'.format(
+        lat, lon, open_weather_key)
+    r = requests.get(url)
+
+    if r.status_code == 400:
+        # invalid parameters - i.e lat and lon
+        return False
+
+    if r.status_code == 401:
+        # invalid api key
+        return False
+
+    if r.status_code != 200:
+        # server internal errors
+        return False
+
+    # start calculations
+    json_response = r.json()
+    tomorrow_data = json_response['daily'][1]
+
+    # check for heat warning
+    max_temp = tomorrow_data['temp']['max']
+    # convert kelvin to cel
+    max_temp = math.floor(max_temp - 273.15)
+    if max_temp > 20:
+        result_dict['has_heat_warning'] = True
+
+    # check for frost warning
+    min_temp = tomorrow_data['temp']['min']
+    # convert kelvin to cel
+    min_temp = math.floor(min_temp - 273.15)
+    if min_temp <= 0:
+        result_dict['has_frost_warning'] = True
+
+    result_dict['success'] = True
+    result_dict['min_temp'] = min_temp
+    result_dict['max_temp'] = max_temp
+
+    return result_dict
+
     
 def get_next_hour_forecast(open_weather_key, lat, lon):
     
